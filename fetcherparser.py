@@ -12,7 +12,8 @@ def read_api_key():
 
 apikey = read_api_key()
 objectcache = {}
-
+replycache = {}
+recursion_loop_detector = {}
 
 def json_parse_url(url):
     if debug:
@@ -40,49 +41,69 @@ def fetch_message(object_id):
     objectcache[parsed['id']] = parsed
     return objectcache[parsed['id']]
 
-def recursive_fetch_message(object_id):
+def clear_recursion_loop_detector():
+    for k in recursion_loop_detector.keys():
+        del(recursion_loop_detector[k])
+
+def recursive_fetch_message(object_id, recursion_level = 0):
+    if debug:
+        print "recursive_fetch_message(%s, %d)" % (object_id, recursion_level)
+        print "recursion_loop_detector=%s" % repr(recursion_loop_detector)
+    if recursion_loop_detector.has_key(object_id):
+        return False
     obj = fetch_message(object_id)
     if not obj:
         return False
+    # Keep track of recursion so we do not get trapped in an infinite loop
+    recursion_loop_detector[object_id] = True
     # Retvieve parent message is any (and other link properties ?)
     for k in ['in_reply_to_status_id',]:
         if (    obj.has_key(k)
             and obj[k]):
             if debug:
                 print "Recursing %s->%s(=%s)" % (obj['id'], k, obj[k])
-            recursive_fetch_message(obj[k])
-# Causes infinite loop, figure out later
-#    # Get replies
-#    if debug:
-#        print "Checking replies for %s" % (obj['id'])
-#    replies = fetch_replies(obj['id'])
+            recursive_fetch_message(obj[k], recursion_level+1)
+    # Get replies
+    if debug:
+        print "Checking replies for %s" % (obj['id'])
+    replies = fetch_replies(obj['id'], recursion_level+1)
+    # Clear the recursion tracker
+    if recursion_level == 0:
+        clear_recursion_loop_detector()
     return True
 
 def fetch_paged(urlbase):
     """This will loop through page numbers until no more results are returned"""
     resultlist = []
     page = 0
-    while (True):
+    loop = True
+    while (loop):
         url = "%s?apikey=%s&page=%d" % (urlbase, apikey, page)
         parsed = json_parse_url(url)
         if (   not parsed
             or len(parsed) == 0):
-            break
+            loop = False
         resultlist = resultlist+parsed
+        page = page+1
     return resultlist
 
-def fetch_replies(object_id):
+def fetch_replies(object_id, recursion_level = 0):
     """Get full list of replies to a message"""
+    if replycache.has_key(object_id):
+        return replycache[object_id]
     replies = fetch_paged("http://www.qaiku.com/api/statuses/replies/%s.json" % object_id)
+    if not replies:
+        replies = []
+    replycache[object_id] = replies
     # Cache all the messages while at it
     for qaiku_message in replies:
-        insert_and_recurse(qaiku_message)
-    return replies
+        insert_and_recurse(qaiku_message, recursion_level)
+    return replycache[object_id]
 
-def insert_and_recurse(qaiku_message):
+def insert_and_recurse(qaiku_message, recursion_level = 0):
     if not objectcache.has_key(qaiku_message['id']):
         objectcache[qaiku_message['id']] = qaiku_message
-    return recursive_fetch_message(qaiku_message['id'])
+    return recursive_fetch_message(qaiku_message['id'], recursion_level)
 
 
 if __name__ == '__main__':
