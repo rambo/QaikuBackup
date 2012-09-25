@@ -5,7 +5,6 @@ of messages and their resources (images etc)"""
 import json, urllib2
 debug = True
 
-
 def read_api_key():
     fp = open('qaiku_api_key.txt')
     return fp.readline().strip()
@@ -25,9 +24,9 @@ def json_parse_url(url):
         print "Got exception %s" % e
         return None
     return parsed
-    
 
 def fetch_message(object_id):
+    """Returns a message, from local cache if available, otherwise loads via REST API"""
     if objectcache.has_key(object_id):
         obj = objectcache[object_id]
         # only return object from cache if it is fully defined
@@ -46,6 +45,7 @@ def clear_recursion_loop_detector():
         del(recursion_loop_detector[k])
 
 def recursive_fetch_message(object_id, recursion_level = 0):
+    """Fetches a message and all it's dependendies/replies/etc"""
     if debug:
         print "recursive_fetch_message(%s, %d)" % (object_id, recursion_level)
         print "recursion_loop_detector=%s" % repr(recursion_loop_detector)
@@ -88,7 +88,7 @@ def fetch_paged(urlbase):
     return resultlist
 
 def fetch_replies(object_id, recursion_level = 0):
-    """Get full list of replies to a message"""
+    """Get full list of replies to a message (and insert them to cache, recursing)"""
     if replycache.has_key(object_id):
         return replycache[object_id]
     replies = fetch_paged("http://www.qaiku.com/api/statuses/replies/%s.json" % object_id)
@@ -101,6 +101,7 @@ def fetch_replies(object_id, recursion_level = 0):
     return replycache[object_id]
 
 def insert_and_recurse(qaiku_message, recursion_level = 0):
+    """Insert a message to cache and get all it's resources/replies/etc"""
     if not objectcache.has_key(qaiku_message['id']):
         objectcache[qaiku_message['id']] = qaiku_message
     return recursive_fetch_message(qaiku_message['id'], recursion_level)
