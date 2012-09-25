@@ -2,7 +2,7 @@ QaikuBackup
 ===========
 
 Basic idea is to make a simple lib for recusively fetching Qaiku data
-via the REST (API)[1] and dump it basically as-is to JSON structure.
+via the [REST API][1] and dump it basically as-is to JSON structure.
 
 Then tools for dumping personal/channel streams using said lib.
 
