@@ -85,6 +85,9 @@ def fetch_paged(urlbase):
             loop = False
         resultlist = resultlist+parsed
         page = page+1
+        #temp page limit
+        if page > 5:
+            loop = False
     return resultlist
 
 def fetch_replies(object_id, recursion_level = 0):
@@ -96,8 +99,7 @@ def fetch_replies(object_id, recursion_level = 0):
         replies = []
     replycache[object_id] = replies
     # Cache all the messages while at it
-    for qaiku_message in replies:
-        insert_and_recurse(qaiku_message, recursion_level)
+    mass_insert_and_recurse(replies, recursion_level)
     return replycache[object_id]
 
 def insert_and_recurse(qaiku_message, recursion_level = 0):
@@ -106,6 +108,13 @@ def insert_and_recurse(qaiku_message, recursion_level = 0):
         objectcache[qaiku_message['id']] = qaiku_message
     return recursive_fetch_message(qaiku_message['id'], recursion_level)
 
+def mass_insert_and_recurse(list_of_messages, recursion_level = 0):
+    for qaiku_message in list_of_messages:
+        if not objectcache.has_key(qaiku_message['id']):
+            objectcache[qaiku_message['id']] = qaiku_message
+    # And then handle the recursions
+    for qaiku_message in list_of_messages:
+        recursive_fetch_message(qaiku_message['id'], recursion_level)
 
 if __name__ == '__main__':
     import sys,os
