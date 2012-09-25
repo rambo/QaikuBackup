@@ -1,5 +1,7 @@
 *.py[co]
 
+qaiku_api_key.txt
+
 # Packages
 *.egg
 *.egg-info
