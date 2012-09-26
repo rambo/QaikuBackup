@@ -7,6 +7,8 @@ def fetch_api_user_messages():
     """Messages only by the user (and comments etc because this all goes to the recursive fetching system)"""
     messages = fetcherparser.fetch_paged("http://www.qaiku.com/api/statuses/user_timeline.json")
     fetcherparser.mass_insert_and_recurse(messages)
+    return [ o['id'] for o in messages ] # Return a list of message ids
+    return messages
 
 def fetch_api_user_stream():
     """Messages in the users stream (and comments etc because this all goes to the recursive fetching system)"""
