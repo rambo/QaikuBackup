@@ -6,6 +6,7 @@ import json, urllib2
 debug = True
 
 def read_api_key():
+    """Helper to read the API key, later will ask for it if the file is missing"""
     fp = open('qaiku_api_key.txt')
     return fp.readline().strip()
 
@@ -15,6 +16,7 @@ replycache = {}
 recursion_loop_detector = {}
 
 def json_parse_url(url):
+    """Trivial helper to avoid copy-pasting same code all over"""
     if debug:
         print "Fetching %s" % url
     try:
