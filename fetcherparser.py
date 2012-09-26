@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 """This module will handle fetching the JSON and parsing it to do recursive fetches
 of messages and their resources (images etc)"""
-import json, urllib2
+import json, urllib2, hashlib, os, re
 debug = True
 
 def read_api_key():
@@ -18,14 +18,50 @@ recursion_loop_detector = {}
 def json_parse_url(url):
     """Trivial helper to avoid copy-pasting same code all over"""
     if debug:
-        print "Fetching %s" % url
+        print "Fetching (JSON) %s" % url
     try:
         fp = urllib2.urlopen(url)
         parsed = json.load(fp)
+        fp.close()
     except Exception,e:
         print "Got exception %s" % e
         return None
     return parsed
+
+
+getparams_re = re.compile('\?.*$')
+
+def fetch_resource(url):
+    """Fetches and stores locally remote resources and returns the local filepath"""
+    local_id = hashlib.md5(url).hexdigest()
+    extension = ""
+    # Try to figure out a file extension just to make things nicer to file browsers
+    try:
+        filename = getparams_re.sub('', os.path.basename(url))
+        extension = filename.rsplit('.', 1)[1] # get the last extension.
+    except Exception,e:
+        print "Got exception %s when trying to figure out file extension for %s" % (e, url)
+    local_path = os.path.join('resources', local_id[0:2], local_id + "." + extension)
+    # If we already have the file just return it
+    if os.path.isfile(local_path):
+        return local_path
+    # Create the container dir if it's not there
+    if not os.path.isdir(os.path.dirname(local_path)):
+        os.makedirs(os.path.dirname(local_path))
+    if debug:
+        print "Fetching (BIN) %s to %s" % (url, local_path)
+    try:
+        fp_from = urllib2.urlopen(url)
+        fp_to = open(local_path, 'wb')
+        # TODO: use a sensibly sized buffer ?
+        fp_to.write(fp_from.read())
+        fp_from.close()
+        fp_to.close()
+    except Exception,e:
+        print "Got exception %s" % e
+        return None
+    return local_path
+
 
 def fetch_message(object_id):
     """Returns a message, from local cache if available, otherwise loads via REST API"""
@@ -87,7 +123,7 @@ def fetch_paged(urlbase):
             loop = False
         resultlist = resultlist+parsed
         page = page+1
-        #temp page limit
+        # TODO: Remove this temp page limit when satisfied with the workings of the rest of the code. (here to prevent 1. unneccessary hammering of the API during testing 2. quicker testing, dumping years worth of messages is going to take a while...)
         if page > 5:
             loop = False
     return resultlist
