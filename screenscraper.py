@@ -48,6 +48,7 @@ def fill_image_urls(message_id):
     if not url:
         return False
 
+    # TODO: Use the recipe to make a session cache so we do not fetch these same urls over and over and over again
     if debug:
         print "Soupifying %s" % url
     soup = BeautifulSoup(urllib2.urlopen(url))
@@ -68,6 +69,8 @@ def fill_image_urls(message_id):
         for prop in ['id', 'QaikuBackup_image_url_view', 'QaikuBackup_image_url_orig']:
             print "obj['%s']=%s" % (prop, obj[prop])
 
+    # Force objectcache update to make sure we don't have funky COW issues
+    fetcherparser.update(obj)
     return True
 
 def fill_and_fetch_image_urls(message_id):
@@ -84,6 +87,8 @@ def fill_and_fetch_image_urls(message_id):
         if res:
             obj[prop] = res
 
+    # Force objectcache update to make sure we don't have funky COW issues
+    fetcherparser.update(obj)
     return True
 
 if __name__ == '__main__':
