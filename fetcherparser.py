@@ -100,6 +100,9 @@ def fetch_replies(object_id, recursion_level = 0):
     replycache[object_id] = replies
     # Cache all the messages while at it
     mass_insert_and_recurse(replies, recursion_level)
+    # And put a list of the replies to the object we fetched them for
+    if objectcache.has_key(object_id): # this should not fail, not at this point anymore
+        objectcache[object_id]['QaikuBackup_replies'] = [ o['id'] for o in replies ] # Map a list of the reply IDs to the object (using python pointers we could just point to the list of objects but that would cause no end of headache for the JSON serialization we plane to do)
     return replycache[object_id]
 
 def insert_and_recurse(qaiku_message, recursion_level = 0):
