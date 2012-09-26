@@ -18,7 +18,8 @@ def fetch_api_user_stream():
 if __name__ == '__main__':
     import sys,os,json
     fetcherparser.read_object_cache()
-    fetch_api_user_messages()
+    messages = fetch_api_user_messages()
+    fetcherparser.write_message_list('user_' + fetcherparser.apikey, messages)
     fetcherparser.write_object_cache()
     print "%d messages in cache" % len(fetcherparser.objectcache)
 
