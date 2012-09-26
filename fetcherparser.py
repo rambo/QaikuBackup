@@ -122,7 +122,7 @@ def recursive_fetch_message(object_id, recursion_level = 0):
     """Fetches a message and all it's dependendies/replies/etc"""
     if debug:
         print "recursive_fetch_message(%s, %d)" % (object_id, recursion_level)
-        print "recursion_loop_detector=%s" % repr(recursion_loop_detector)
+        #print "recursion_loop_detector=%s" % repr(recursion_loop_detector)
     if recursion_loop_detector.has_key(object_id):
         return False
     obj = fetch_message(object_id)
