@@ -10,8 +10,10 @@ def fetch_channel_messages(channel):
     return messages
 
 if __name__ == '__main__':
-    import sys,os,json
+    import sys,os
+    channel = sys.argv[1]
     fetcherparser.read_object_cache()
-    fetch_channel_messages(sys.argv[1])
+    messages = fetch_channel_messages(channel)
+    fetcherparser.write_message_list('channel_' + channel, messages)
     fetcherparser.write_object_cache()
     print "%d messages in cache" % len(fetcherparser.objectcache)

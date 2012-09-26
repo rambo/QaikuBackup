@@ -30,6 +30,31 @@ def json_parse_url(url):
         return None
     return parsed
 
+def write_message_list(identifier, messages):
+    """Writes a list of messages ids to a file, basically used to dump the lists from channeldump and userdump modules"""
+    local_path = os.path.join('resources', identifier + '.json')
+    if not os.path.isdir(os.path.dirname(local_path)):
+        os.makedirs(os.path.dirname(local_path))
+    fp_to = open(local_path, 'wb')
+    json.dump([ o['id'] for o in messages ], fp_to, sort_keys=False, indent=4)
+    fp_to.close()
+    return True
+
+def read_message_list(identifier):
+    """Read a list dumped with write_message_list, returns the full messages"""
+    local_path = os.path.join('resources', identifier + '.json')
+    fp = open(local_path, 'rb')
+    parsed = json.load(fp)
+    fp.close()
+    for k in range(len(parsed)):
+        message_id = parsed[k]
+        if not recursive_fetch_message(message_id):
+            # remove the message if it could not be expanded
+            del(parsed[k])
+            continue
+        parsed[k] = fetch_message(message_id) # This will be returned from the cache properly expanded by the previous fetch
+    return parsed
+
 def write_object_cache():
     """Writes the current objectcache to disk, will simply overwrite the previous one so use with caution..."""
     local_path = os.path.join('resources', 'objectcache.json')
@@ -91,7 +116,7 @@ def fetch_resource(url):
 
 
 def fetch_message(object_id):
-    """Returns a message, from local cache if available, otherwise loads via REST API, you probably should be using recursive_fetch_message"""
+    """Returns a message, from local cache if available, otherwise loads via REST API, you probably should be calling recursive_fetch_message first"""
     if objectcache.has_key(object_id):
         obj = objectcache[object_id]
         if (   (    obj.has_key('truncated')
