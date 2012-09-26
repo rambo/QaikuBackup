@@ -30,9 +30,34 @@ def json_parse_url(url):
         return None
     return parsed
 
+def write_object_cache():
+    """Writes the current objectcache to disk, will simply overwrite the previous one so use with caution..."""
+    local_path = os.path.join('resources', 'objectcache.json')
+    if not os.path.isdir(os.path.dirname(local_path)):
+        os.makedirs(os.path.dirname(local_path))
+    fp_to = open(local_path, 'wb')
+    json.dump(objectcache, fp_to, sort_keys=True, indent=4)
+    fp_to.close()
+    return True
+    
+def read_object_cache(mark_stale=True):
+    """Reads the object cache from disk (and marks every object stale by default)"""
+    local_path = os.path.join('resources', 'objectcache.json')
+    if not os.path.isfile(local_path):
+        return False
+    fp = open(local_path)
+    parsed = json.load(fp)
+    fp.close()
+    for msg_id in parsed:
+        qaiku_message = parsed[msg_id]
+        if not objectcache.has_key(qaiku_message['id']):
+            objectcache[qaiku_message['id']] = qaiku_message
+            if mark_stale:
+                objectcache[qaiku_message['id']]['QaikuBackup_stale'] = True
+    return True
 
+# compile this just once, it's used by fetch_resource()
 getparams_re = re.compile('\?.*$')
-
 def fetch_resource(url):
     """Fetches and stores locally remote resources and returns the local filepath"""
     local_id = hashlib.md5(url).hexdigest()
