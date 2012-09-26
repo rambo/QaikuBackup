@@ -137,6 +137,7 @@ def fetch_resource(url):
 
 def fetch_message(object_id):
     """Returns a message, from local cache if available, otherwise loads via REST API, you probably should be calling recursive_fetch_message first"""
+    object_id = str(object_id) # cast to normal str
     if objectcache.has_key(object_id):
         obj = objectcache[object_id]
         if (   (    obj.has_key('truncated')
@@ -147,6 +148,8 @@ def fetch_message(object_id):
             # Object is stale, do not return from cache
             pass
         else:
+            if debug:
+                print "message %s returned from cache" % object_id
             return objectcache[object_id]
     url = "http://www.qaiku.com/api/statuses/show/%s.json?apikey=%s" % (object_id, apikey)
     parsed = json_parse_url(url)
@@ -239,12 +242,15 @@ def fetch_replies(object_id, recursion_level = 0):
     replies = fetch_paged("http://www.qaiku.com/api/statuses/replies/%s.json" % object_id)
     if not replies:
         replies = []
-    replycache[object_id] = replies
     # Cache all the messages while at it
     mass_insert_and_recurse(replies, recursion_level)
+    replycache[object_id] = map(lambda o: fetch_message(str(o['id'])), replies) # refresh the objects before placing them as pointers to the replycache
     # And put a list of the replies to the object we fetched them for
-    if objectcache.has_key(object_id): # this should not fail, not at this point anymore
-        objectcache[object_id]['QaikuBackup_replies'] = [ o['id'] for o in replies ] # Map a list of the reply IDs to the object (using python pointers we could just point to the list of objects but that would cause no end of headache for the JSON serialization we plane to do)
+    obj = fetch_message(object_id)
+    if in_cache(obj): # this should not fail, not at this point anymore
+        obj['QaikuBackup_replies'] = [ o['id'] for o in replies ] # Map a list of the reply IDs to the object (using python pointers we could just point to the list of objects but that would cause no end of headache for the JSON serialization we plane to do)
+        # Force objectcache update to make sure we don't have funky COW issues
+        update(obj)
     return replycache[object_id]
 
 def insert_and_recurse(qaiku_message, recursion_level = 0):
