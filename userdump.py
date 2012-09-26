@@ -16,7 +16,7 @@ def fetch_api_user_stream():
     return messages
 
 if __name__ == '__main__':
-    import sys,os,json
+    import sys,os
     fetcherparser.read_object_cache()
     messages = fetch_api_user_messages()
     fetcherparser.write_message_list('user_' + fetcherparser.apikey, messages)
