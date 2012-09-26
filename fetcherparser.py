@@ -105,6 +105,12 @@ def fetch_message(object_id):
             return objectcache[object_id]
     url = "http://www.qaiku.com/api/statuses/show/%s.json?apikey=%s" % (object_id, apikey)
     parsed = json_parse_url(url)
+    if not parsed:
+        # parse failed, return stale object if we have one
+        if objectcache.has_key(object_id):
+            return objectcache[object_id]
+        else:
+            return None
     objectcache[parsed['id']] = parsed
     return objectcache[parsed['id']]
 
