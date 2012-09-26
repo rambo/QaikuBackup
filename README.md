@@ -12,4 +12,9 @@ something else (HTML, RSS, whatever)
 
 [1]: http://www.qaiku.com/api/usage/
 
+## Screenscraping
 
+Unfortunately the REST api only provides access to image thumbnails, to get the original images
+some unsavory techniques are needed and for those [BeautifulSoup4][2].
+
+[2]: http://www.crummy.com/software/BeautifulSoup/

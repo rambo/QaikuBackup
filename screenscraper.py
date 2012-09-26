@@ -2,7 +2,17 @@
 # -*- coding: UTF-8 -*-
 import fetcherparser,json
 
+# Done this way allow gracefull degradation
+can_scrape = False
+try:
+    from bs4 import BeautifulSoup
+    can_scrape = True
+except ImportError:
+    pass
+
 def fill_image_urls(message_id):
+    if not can_scrape:
+        return False
     if (    not fetcherparser.objectcache.has_key(message_id)
         and not fetcherparser.recursive_fetch_message(message_id)):
         print "Fail"
@@ -31,5 +41,7 @@ def fill_and_fetch_image_urls(message_id):
 if __name__ == '__main__':
     import sys,os
     msgid = sys.argv[1]
-    fill_image_urls(msgid)
-    print json.dumps(fetcherparser.objectcache[msgid], sort_keys=True, indent=4)
+    if fill_image_urls(msgid):
+        print json.dumps(fetcherparser.objectcache[msgid], sort_keys=True, indent=4)
+    else:
+        sys.exit(1)
