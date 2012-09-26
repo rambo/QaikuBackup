@@ -3,7 +3,9 @@
 """This module will handle fetching the JSON and parsing it to do recursive fetches
 of messages and their resources (images etc)"""
 import json, urllib2, hashlib, os, re
+# some global config values
 debug = True
+fetch_profile_images = True
 
 def read_api_key():
     """Helper to read the API key, later will ask for it if the file is missing"""
@@ -64,7 +66,7 @@ def fetch_resource(url):
 
 
 def fetch_message(object_id):
-    """Returns a message, from local cache if available, otherwise loads via REST API"""
+    """Returns a message, from local cache if available, otherwise loads via REST API, you probably should be using recursive_fetch_message"""
     if objectcache.has_key(object_id):
         obj = objectcache[object_id]
         # only return object from cache if it is fully defined
@@ -105,6 +107,23 @@ def recursive_fetch_message(object_id, recursion_level = 0):
     if debug:
         print "Checking replies for %s" % (obj['id'])
     replies = fetch_replies(obj['id'], recursion_level+1)
+    
+    # Cache and rewrite profile image url
+    if (    fetch_profile_images
+        and obj.has_key('user')
+        and obj['user'].has_key('profile_image_url')):
+        res = fetch_resource(obj['user']['profile_image_url'])
+        if res:
+            obj['user']['profile_image_url'] = res
+    
+    # Fetch the message image if any, however this is the tiny thumbnail :..(
+    if (    obj.has_key('image_url')
+        and obj['image_url']):
+        res = fetch_resource(obj['image_url'])
+        if res:
+            obj['image_url'] = res
+        # TODO: Fetch the real image, this will take some screen-scraping unless Rohea is kind enough to add the URL to the API in these last times...
+
     # Clear the recursion tracker
     if recursion_level == 0:
         clear_recursion_loop_detector()
