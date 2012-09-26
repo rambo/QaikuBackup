@@ -69,11 +69,14 @@ def fetch_message(object_id):
     """Returns a message, from local cache if available, otherwise loads via REST API, you probably should be using recursive_fetch_message"""
     if objectcache.has_key(object_id):
         obj = objectcache[object_id]
-        # only return object from cache if it is fully defined
-        if (   (not obj.has_key('truncated'))
-            or (    obj.has_key('truncated')
-                and not obj['truncated'])
+        if (   (    obj.has_key('truncated')
+                and obj['truncated'])
+            or (    obj.has_key('QaikuBackup_stale')
+                and obj['QaikuBackup_stale'])
             ):
+            # Object is stale, do not return from cache
+            pass
+        else:
             return objectcache[object_id]
     url = "http://www.qaiku.com/api/statuses/show/%s.json?apikey=%s" % (object_id, apikey)
     parsed = json_parse_url(url)
