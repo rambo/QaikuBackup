@@ -7,6 +7,8 @@ import json, urllib2, hashlib, os, re
 debug = True
 fetch_profile_images = True
 
+import screenscraper
+
 def read_api_key():
     """Helper to read the API key, later will ask for it if the file is missing"""
     fp = open('qaiku_api_key.txt')
@@ -181,7 +183,8 @@ def recursive_fetch_message(object_id, recursion_level = 0):
         res = fetch_resource(obj['image_url'])
         if res:
             obj['image_url'] = res
-        # TODO: Fetch the real image, this will take some screen-scraping unless Rohea is kind enough to add the URL to the API in these last times...
+        # Fetch the real image, this will take some screen-scraping unless Rohea is kind enough to add the URL to the API in these last times...
+        screenscraper.fill_and_fetch_image_urls(obj['id'])
 
     # Clear the recursion tracker
     if recursion_level == 0:
