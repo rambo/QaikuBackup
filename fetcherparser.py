@@ -169,6 +169,7 @@ def clear_recursion_loop_detector():
 # TODO: rethink this and fetch_message
 def recursive_fetch_message(object_id, recursion_level = 0):
     """Fetches a message and all it's dependendies/replies/etc"""
+    object_id = str(object_id) # cast to normal str
     if debug:
         print "recursive_fetch_message(%s, %d)" % (object_id, recursion_level)
         #print "recursion_loop_detector=%s" % repr(recursion_loop_detector)
@@ -237,6 +238,7 @@ def fetch_paged(urlbase):
 
 def fetch_replies(object_id, recursion_level = 0):
     """Get full list of replies to a message (and insert them to cache, recursing)"""
+    object_id = str(object_id) # normalize the id
     if replycache.has_key(object_id):
         return replycache[object_id]
     replies = fetch_paged("http://www.qaiku.com/api/statuses/replies/%s.json" % object_id)
