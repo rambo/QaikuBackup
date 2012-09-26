@@ -63,6 +63,10 @@ def fill_image_urls(message_id):
     if not orig_link:
         return False
     obj['QaikuBackup_image_url_orig'] = orig_link['href']
+    
+    if debug:
+        for prop in ['id', 'QaikuBackup_image_url_view', 'QaikuBackup_image_url_orig']:
+            print "obj['%s']=%s" % (prop, obj[prop])
 
     return True
 

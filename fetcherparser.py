@@ -85,8 +85,12 @@ def read_object_cache(mark_stale=True):
 
 # compile this just once, it's used by fetch_resource()
 getparams_re = re.compile('\?.*$')
+local_resource_re = re.compile('^' + os.path.join('resources', '').replace('\\', '\\\\') + '[0-9a-f]{2}')
 def fetch_resource(url):
     """Fetches and stores locally remote resources and returns the local filepath"""
+    if local_resource_re.match(url):
+        # This is already a local resource
+        return url
     local_id = hashlib.md5(url).hexdigest()
     extension = ""
     # Try to figure out a file extension just to make things nicer to file browsers
@@ -183,6 +187,8 @@ def recursive_fetch_message(object_id, recursion_level = 0):
         res = fetch_resource(obj['image_url'])
         if res:
             obj['image_url'] = res
+        # Force objectcache updat to make sure we don't have funky COW issues
+        objectcache[obj['id']] = obj
         # Fetch the real image, this will take some screen-scraping unless Rohea is kind enough to add the URL to the API in these last times...
         screenscraper.fill_and_fetch_image_urls(obj['id'])
 
