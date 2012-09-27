@@ -68,6 +68,12 @@ def fetch_resource(url):
         fp_to.close()
     except Exception,e:
         print "Got exception %s" % e
+        if fp_from:
+            fp_from.close()
+        if fp_to:
+            fp_to.close()
+        if os.path.isfile(local_path):
+            os.unlink(local_path)
         return None
     return local_path
 
