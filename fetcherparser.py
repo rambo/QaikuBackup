@@ -59,6 +59,8 @@ def fetch_resource(url):
         os.makedirs(os.path.dirname(local_path))
     if debug:
         print "Fetching (BIN) %s to %s" % (url, local_path)
+    fp_from = None
+    fp_to = None
     try:
         fp_from = urllib_cached.urlopen(url)
         fp_to = open(local_path, 'wb')

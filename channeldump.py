@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 """This tool will fetch a channel stream and dump it using the fetcherparser"""
-import storage, fetcherparser
+import storage, fetcherparser, urllib_cached
 
 def fetch_channel_messages(channel):
     """Messages in the channel (and comments etc because this all goes to the recursive fetching system)"""

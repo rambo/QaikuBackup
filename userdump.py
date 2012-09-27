@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 """This tool will fetch users Qaiku stream and dump it using the fetcherparser"""
-import storage, fetcherparser
+import storage, fetcherparser, urllib_cached
 
 def fetch_api_user_messages():
     """Messages only by the user (and comments etc because this all goes to the recursive fetching system)"""
