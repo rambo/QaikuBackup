@@ -16,7 +16,7 @@ def fill_image_urls(message_id):
     """Loads the object, then tries to figure out the web URL for it and scrape said url for the images"""
     if not can_scrape:
         return False
-    if (    not fetcherparser.objectcache.has_key(message_id)
+    if (    not storage.in_cache_byid(message_id)
         and not fetcherparser.recursive_fetch_message(message_id)):
         return False
     obj = fetcherparser.fetch_message(message_id)
@@ -70,7 +70,7 @@ def fill_image_urls(message_id):
             print "obj['%s']=%s" % (prop, obj[prop])
 
     # Force objectcache update to make sure we don't have funky COW issues
-    fetcherparser.update(obj)
+    storage.update(obj)
     return True
 
 def fill_and_fetch_image_urls(message_id):
@@ -88,13 +88,13 @@ def fill_and_fetch_image_urls(message_id):
             obj[prop] = res
 
     # Force objectcache update to make sure we don't have funky COW issues
-    fetcherparser.update(obj)
+    storage.update(obj)
     return True
 
 if __name__ == '__main__':
     import sys,os,json
     msgid = sys.argv[1]
     if fill_image_urls(msgid):
-        print json.dumps(fetcherparser.objectcache[msgid], sort_keys=True, indent=4)
+        print json.dumps(storage.get_byid(msgid), sort_keys=True, indent=4)
     else:
         sys.exit(1)

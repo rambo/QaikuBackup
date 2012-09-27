@@ -11,6 +11,8 @@ fetch_profile_images = True
 
 import storage, screenscraper
 
+apikey = storage.read_api_key()
+
 replycache = {}
 recursion_loop_detector = {}
 

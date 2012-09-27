@@ -17,10 +17,10 @@ def fetch_api_user_stream():
 
 if __name__ == '__main__':
     import sys,os
-    fetcherparser.read_object_cache()
+    storage.read_object_cache()
     messages = fetch_api_user_messages()
-    fetcherparser.write_message_list('user_' + fetcherparser.apikey, messages)
-    fetcherparser.write_object_cache()
-    print "%d messages in cache" % len(fetcherparser.objectcache)
+    storage.write_message_list('user_' + storage.apikey, messages)
+    storage.write_object_cache()
+    print "%d messages in cache" % len(storage.objectcache)
 
 
