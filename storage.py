@@ -3,9 +3,7 @@
 """Routines to keep during session and write/read back message data (and related helpers)"""
 debug = True
 
-
-import json, urllib2, hashlib, os, re
-import traceback, sys
+import json, os
 
 def read_api_key():
     """Helper to read the API key, later will ask for it if the file is missing"""
@@ -17,6 +15,7 @@ objectcache = {}
 
 def update(obj):
     """(Re-)inserts the object to the cache dict, maybe this will help with weird cow/pointer issues"""
+    global objectcache
     object_id = str(obj['id'])
     objectcache[object_id] = obj
 

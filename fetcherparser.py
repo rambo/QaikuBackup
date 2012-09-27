@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 """This module will handle fetching the JSON and parsing it to do recursive fetches of messages and their resources (images etc)"""
-import json, urllib2, hashlib, os, re
+import json, urllib_cached, hashlib, os, re
 import traceback
 # some global config values
 
@@ -21,7 +21,7 @@ def json_parse_url(url):
     if debug:
         print "Fetching (JSON) %s" % url
     try:
-        fp = urllib2.urlopen(url)
+        fp = urllib_cached.urlopen(url)
         parsed = json.load(fp)
         fp.close()
     except Exception,e:
@@ -60,7 +60,7 @@ def fetch_resource(url):
     if debug:
         print "Fetching (BIN) %s to %s" % (url, local_path)
     try:
-        fp_from = urllib2.urlopen(url)
+        fp_from = urllib_cached.urlopen(url)
         fp_to = open(local_path, 'wb')
         # TODO: use a sensibly sized buffer ?
         fp_to.write(fp_from.read())
@@ -228,6 +228,7 @@ if __name__ == '__main__':
     import sys,os
     print "*** STARTING ***"
     recursive_fetch_message(sys.argv[1])
+    urllib_cached.clean()
     print "*** DONE ***"
     print "storage.objectcache contents:"
     print json.dumps(storage.objectcache, sort_keys=True, indent=4)

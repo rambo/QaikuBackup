@@ -35,7 +35,7 @@ class ThrottlingProcessor(urllib2.BaseHandler):
             (time.time() - self.lastRequestTime[request.host] < self.throttleDelay)):
             self.throttleTime = (self.throttleDelay -
                                  (currentTime - self.lastRequestTime[request.host]))
-            # print "ThrottlingProcessor: Sleeping for %s seconds" % self.throttleTime
+            print "ThrottlingProcessor: Sleeping for %s seconds" % self.throttleTime
             time.sleep(self.throttleTime)
         self.lastRequestTime[request.host] = currentTime
 
@@ -61,7 +61,7 @@ class CacheHandler(urllib2.BaseHandler):
     def default_open(self,request):
         if ((request.get_method() == "GET") and 
             (CachedResponse.ExistsInCache(self.cacheLocation, request.get_full_url()))):
-            # print "CacheHandler: Returning CACHED response for %s" % request.get_full_url()
+            print "CacheHandler: Returning CACHED response for %s" % request.get_full_url()
             return CachedResponse(self.cacheLocation, request.get_full_url(), setCacheHeader=True)	
         else:
             return None # let the next handler try to handle the request
@@ -148,6 +148,31 @@ class Tests(unittest.TestCase):
         resp = opener.open("http://www.python.org/")
         self.assert_('x-cache' in resp.info())
         self.assert_('x-throttling' not in resp.info())
+
+import shutil
+def clean():
+    """Removes the cache directory if it exists"""
+    if os.path.isdir(".urllib2cache"):
+        shutil.rmtree(".urllib2cache")
+        print "  urllib_cached: Removed cache dir"
+
+opener = None
+def init(throttle = 2):
+    """Initializes a common opener with caching and throttling"""
+    global opener
+    clean()
+    opener = urllib2.build_opener(CacheHandler(".urllib2cache"), ThrottlingProcessor(throttle))
+    print "  urllib_cached: Opener initialized"
+
+def conditional_init(throttle=2):
+    if not opener:
+        init(throttle)
+
+def urlopen(url):
+    """Act like urllib2.urlopen() (I hope...)"""
+    global opener
+    conditional_init()
+    return opener.open(url)
 
 if __name__ == "__main__":
     unittest.main()

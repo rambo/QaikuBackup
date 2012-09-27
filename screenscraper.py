@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 """Screenscraper routines to get the URLs of images in messages (the proper images, not the tiny thumbnail the API provides)"""
-import urllib2
+import urllib_cached
 import storage, fetcherparser
 
 debug = True
@@ -53,7 +53,7 @@ def fill_image_urls(message_id):
     # TODO: Use the recipe to make a session cache so we do not fetch these same urls over and over and over again
     if debug:
         print "Soupifying %s" % url
-    soup = BeautifulSoup(urllib2.urlopen(url))
+    soup = BeautifulSoup(urllib_cached.urlopen(url))
 
     msg_div = soup.find(id="qaiku_%s" % message_id)
     if not msg_div:
@@ -67,9 +67,9 @@ def fill_image_urls(message_id):
         return False
     obj['QaikuBackup_image_url_orig'] = orig_link['href']
     
-    if debug:
-        for prop in ['id', 'QaikuBackup_image_url_view', 'QaikuBackup_image_url_orig']:
-            print "obj['%s']=%s" % (prop, obj[prop])
+#    if debug:
+#        for prop in ['id', 'QaikuBackup_image_url_view', 'QaikuBackup_image_url_orig']:
+#            print "obj['%s']=%s" % (prop, obj[prop])
 
     # Force objectcache update to make sure we don't have funky COW issues
     storage.update(obj)
@@ -98,9 +98,11 @@ if __name__ == '__main__':
     msgid = sys.argv[1]
     print "*** STARTING ***"
     if fill_image_urls(msgid):
+        urllib_cached.clean()
         print "*** DONE ***"
         print "message %s contents:" % msgid
         print json.dumps(storage.get_byid(msgid), sort_keys=True, indent=4)
     else:
+        urllib_cached.clean()
         print "*** FAILED ***"
         sys.exit(1)

@@ -17,5 +17,6 @@ if __name__ == '__main__':
     messages = fetch_channel_messages(channel)
     storage.write_message_list('channel_' + channel, messages)
     storage.write_object_cache()
+    urllib_cached.clean()
     print "*** DONE ***"
     print "%d messages in cache" % len(storage.objectcache)
