@@ -50,6 +50,7 @@ def fetch_resource(url):
     if os.path.isfile(local_path):
         # Make sure the file has sane amount of data...
         if (os.stat(local_path).st_size > 16):
+            print "ERR: Local file %s is empty, removing" % local_path
             os.unlink(local_path)
         else:
             return local_path
