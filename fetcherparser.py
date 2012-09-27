@@ -175,7 +175,7 @@ def recursive_fetch_message(object_id, recursion_level = 0):
         clear_recursion_loop_detector()
     return True
 
-def fetch_paged(urlbase):
+def fetch_paged(urlbase, pagelimit=None):
     """This will loop through page numbers until no more results are returned"""
     resultlist = []
     page = 0
@@ -188,8 +188,8 @@ def fetch_paged(urlbase):
             loop = False
         resultlist = resultlist+parsed
         page = page+1
-        # TODO: Remove this temp page limit when satisfied with the workings of the rest of the code. (here to prevent 1. unneccessary hammering of the API during testing 2. quicker testing, dumping years worth of messages is going to take a while...)
-        if page > 5:
+        if (    pagelimit
+            and page > pagelimit):
             loop = False
     return resultlist
 
