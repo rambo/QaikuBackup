@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-
+"""Routines to keep during session and write/read back message data (and related helpers)"""
 debug = True
 
 

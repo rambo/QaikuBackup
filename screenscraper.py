@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-import fetcherparser,urllib2
+"""Screenscraper routines to get the URLs of images in messages (the proper images, not the tiny thumbnail the API provides)"""
+import urllib2
+import storage, fetcherparser
 
 debug = True
 
@@ -94,7 +96,11 @@ def fill_and_fetch_image_urls(message_id):
 if __name__ == '__main__':
     import sys,os,json
     msgid = sys.argv[1]
+    print "*** STARTING ***"
     if fill_image_urls(msgid):
+        print "*** DONE ***"
+        print "message %s contents:" % msgid
         print json.dumps(storage.get_byid(msgid), sort_keys=True, indent=4)
     else:
+        print "*** FAILED ***"
         sys.exit(1)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 """This tool will fetch users Qaiku stream and dump it using the fetcherparser"""
-import fetcherparser
+import storage, fetcherparser
 
 def fetch_api_user_messages():
     """Messages only by the user (and comments etc because this all goes to the recursive fetching system)"""
@@ -17,10 +17,12 @@ def fetch_api_user_stream():
 
 if __name__ == '__main__':
     import sys,os
+    print "*** STARTING ***"
     storage.read_object_cache()
     messages = fetch_api_user_messages()
     storage.write_message_list('user_' + storage.apikey, messages)
     storage.write_object_cache()
+    print "*** DONE ***"
     print "%d messages in cache" % len(storage.objectcache)
 
 

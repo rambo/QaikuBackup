@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-"""This module will handle fetching the JSON and parsing it to do recursive fetches
-of messages and their resources (images etc)"""
+"""This module will handle fetching the JSON and parsing it to do recursive fetches of messages and their resources (images etc)"""
 import json, urllib2, hashlib, os, re
 import traceback, sys
 # some global config values
@@ -212,5 +211,8 @@ def mass_insert_and_recurse(list_of_messages, recursion_level = 0):
 
 if __name__ == '__main__':
     import sys,os
+    print "*** STARTING ***"
     recursive_fetch_message(sys.argv[1])
+    print "*** DONE ***"
+    print "storage.objectcache contents:" % msgid
     print json.dumps(storage.objectcache, sort_keys=True, indent=4)
