@@ -81,7 +81,7 @@ def read_object_cache(mark_stale=True):
     for msg_id in parsed:
         qaiku_message = parsed[msg_id]
         if not in_cache(qaiku_message):
-            update(qaiku_message)
             if mark_stale:
                 qaiku_message['QaikuBackup_stale'] = True
+            update(qaiku_message)
     return True
