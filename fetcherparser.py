@@ -48,7 +48,11 @@ def fetch_resource(url):
     local_path = os.path.join('resources', local_id[0:2], local_id + "." + extension)
     # If we already have the file just return it
     if os.path.isfile(local_path):
-        return local_path
+        # Make sure the file has sane amount of data...
+        if (os.stat(local_path).st_size > 16):
+            os.unlink(local_path)
+        else:
+            return local_path
     # Create the container dir if it's not there
     if not os.path.isdir(os.path.dirname(local_path)):
         os.makedirs(os.path.dirname(local_path))
