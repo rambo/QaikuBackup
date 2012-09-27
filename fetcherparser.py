@@ -3,19 +3,14 @@
 """This module will handle fetching the JSON and parsing it to do recursive fetches
 of messages and their resources (images etc)"""
 import json, urllib2, hashlib, os, re
+import traceback, sys
 # some global config values
+
 debug = True
 fetch_profile_images = True
 
-import screenscraper
+import storage, screenscraper
 
-def read_api_key():
-    """Helper to read the API key, later will ask for it if the file is missing"""
-    fp = open('qaiku_api_key.txt')
-    return fp.readline().strip()
-
-apikey = read_api_key()
-objectcache = {}
 replycache = {}
 recursion_loop_detector = {}
 
@@ -31,71 +26,6 @@ def json_parse_url(url):
         print "Got exception %s" % e
         return None
     return parsed
-
-def update(obj):
-    """Re-inserts the object to the cache dict, maybe this will help with weird cow/pointer issues"""
-    object_id = str(obj['id'])
-    objectcache[object_id] = obj
-    if debug:
-        print "After update objectcache[%s] is" % object_id
-        print json.dumps(objectcache[object_id], sort_keys=True, indent=4)
-        
-def in_cache(obj):
-    """Normalized way to check for object presence in cache"""
-    object_id = str(obj['id'])
-    return objectcache.has_key(object_id)
-    
-
-def write_message_list(identifier, messages):
-    """Writes a list of messages ids to a file, basically used to dump the lists from channeldump and userdump modules"""
-    local_path = os.path.join('resources', identifier + '.json')
-    if not os.path.isdir(os.path.dirname(local_path)):
-        os.makedirs(os.path.dirname(local_path))
-    fp_to = open(local_path, 'wb')
-    json.dump([ o['id'] for o in messages ], fp_to, sort_keys=False, indent=4)
-    fp_to.close()
-    return True
-
-def read_message_list(identifier):
-    """Read a list dumped with write_message_list, returns the full messages"""
-    local_path = os.path.join('resources', identifier + '.json')
-    fp = open(local_path, 'rb')
-    parsed = json.load(fp)
-    fp.close()
-    for k in range(len(parsed)):
-        message_id = parsed[k]
-        if not recursive_fetch_message(message_id):
-            # remove the message if it could not be expanded
-            del(parsed[k])
-            continue
-        parsed[k] = fetch_message(message_id) # This will be returned from the cache properly expanded by the previous fetch
-    return parsed
-
-def write_object_cache():
-    """Writes the current objectcache to disk, will simply overwrite the previous one so use with caution..."""
-    local_path = os.path.join('resources', 'objectcache.json')
-    if not os.path.isdir(os.path.dirname(local_path)):
-        os.makedirs(os.path.dirname(local_path))
-    fp_to = open(local_path, 'wb')
-    json.dump(objectcache, fp_to, sort_keys=True, indent=4)
-    fp_to.close()
-    return True
-    
-def read_object_cache(mark_stale=True):
-    """Reads the object cache from disk (and marks every object stale by default)"""
-    local_path = os.path.join('resources', 'objectcache.json')
-    if not os.path.isfile(local_path):
-        return False
-    fp = open(local_path)
-    parsed = json.load(fp)
-    fp.close()
-    for msg_id in parsed:
-        qaiku_message = parsed[msg_id]
-        if not in_cache(qaiku_message):
-            update(qaiku_message)
-            if mark_stale:
-                qaiku_message['QaikuBackup_stale'] = True
-    return True
 
 # compile this just once, it's used by fetch_resource()
 getparams_re = re.compile('\?.*$')
@@ -137,30 +67,39 @@ def fetch_resource(url):
 
 def fetch_message(object_id):
     """Returns a message, from local cache if available, otherwise loads via REST API, you probably should be calling recursive_fetch_message first"""
+    if debug:
+        print "fetch_message(%s) called from" % repr(object_id)
+        traceback.print_stack()
     object_id = str(object_id) # cast to normal str
-    if objectcache.has_key(object_id):
-        obj = objectcache[object_id]
+    if storage.in_cache_byid(object_id):
+        obj = storage.get_byid(object_id)
         if (   (    obj.has_key('truncated')
                 and obj['truncated'])
             or (    obj.has_key('QaikuBackup_stale')
                 and obj['QaikuBackup_stale'])
             ):
             # Object is stale, do not return from cache
+            if debug:
+                print "storage.objectcache[%s] is stale" % repr(object_id)
+                print json.dumps(storage.get_byid(object_id), sort_keys=True, indent=4)
             pass
         else:
             if debug:
                 print "message %s returned from cache" % object_id
-            return objectcache[object_id]
+            return storage.get_byid(object_id)
+    else:
+        print "objectcache has no key %s" % repr(object_id)
+        print json.dumps(storage.objectcache, sort_keys=True, indent=4)
     url = "http://www.qaiku.com/api/statuses/show/%s.json?apikey=%s" % (object_id, apikey)
     parsed = json_parse_url(url)
     if not parsed:
         # parse failed, return stale object if we have one
-        if objectcache.has_key(object_id):
-            return objectcache[object_id]
+        if storage.in_cache_byid(object_id):
+            return storage.get_byid(object_id)
         else:
             return None
-    update(parsed)
-    return objectcache[object_id]
+    storage.update(parsed)
+    return storage.get_byid(object_id)
 
 def clear_recursion_loop_detector():
     for k in recursion_loop_detector.keys():
@@ -171,7 +110,7 @@ def recursive_fetch_message(object_id, recursion_level = 0):
     """Fetches a message and all it's dependendies/replies/etc"""
     object_id = str(object_id) # cast to normal str
     if debug:
-        print "recursive_fetch_message(%s, %d)" % (object_id, recursion_level)
+        print "recursive_fetch_message(%s, %d)" % (repr(object_id), recursion_level)
         #print "recursion_loop_detector=%s" % repr(recursion_loop_detector)
     if recursion_loop_detector.has_key(object_id):
         return False
@@ -196,7 +135,7 @@ def recursive_fetch_message(object_id, recursion_level = 0):
         if res:
             obj['image_url'] = res
         # Force objectcache update to make sure we don't have funky COW issues
-        update(obj)
+        storage.update(obj)
         # Fetch the real image, this will take some screen-scraping unless Rohea is kind enough to add the URL to the API in these last times...
         screenscraper.fill_and_fetch_image_urls(obj['id'])
 
@@ -249,22 +188,22 @@ def fetch_replies(object_id, recursion_level = 0):
     replycache[object_id] = map(lambda o: fetch_message(str(o['id'])), replies) # refresh the objects before placing them as pointers to the replycache
     # And put a list of the replies to the object we fetched them for
     obj = fetch_message(object_id)
-    if in_cache(obj): # this should not fail, not at this point anymore
+    if storage.in_cache(obj): # this should not fail, not at this point anymore
         obj['QaikuBackup_replies'] = [ o['id'] for o in replies ] # Map a list of the reply IDs to the object (using python pointers we could just point to the list of objects but that would cause no end of headache for the JSON serialization we plane to do)
         # Force objectcache update to make sure we don't have funky COW issues
-        update(obj)
+        storage.update(obj)
     return replycache[object_id]
 
 def insert_and_recurse(qaiku_message, recursion_level = 0):
     """Insert a message to cache and get all it's resources/replies/etc"""
-    if not in_cache(qaiku_message):
-        update(qaiku_message)
+    if not storage.in_cache(qaiku_message):
+        storage.update(qaiku_message)
     return recursive_fetch_message(qaiku_message['id'], recursion_level)
 
 def mass_insert_and_recurse(list_of_messages, recursion_level = 0):
     for qaiku_message in list_of_messages:
-        if not in_cache(qaiku_message):
-            update(qaiku_message)
+        if not storage.in_cache(qaiku_message):
+            storage.update(qaiku_message)
     # And then handle the recursions
     for qaiku_message in list_of_messages:
         recursive_fetch_message(qaiku_message['id'], recursion_level)
@@ -272,4 +211,4 @@ def mass_insert_and_recurse(list_of_messages, recursion_level = 0):
 if __name__ == '__main__':
     import sys,os
     recursive_fetch_message(sys.argv[1])
-    print json.dumps(objectcache, sort_keys=True, indent=4)
+    print json.dumps(storage.objectcache, sort_keys=True, indent=4)
