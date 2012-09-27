@@ -50,10 +50,13 @@ def fill_image_urls(message_id):
     if not url:
         return False
 
-    # TODO: Use the recipe to make a session cache so we do not fetch these same urls over and over and over again
     if debug:
         print "Soupifying %s" % url
-    soup = BeautifulSoup(urllib_cached.urlopen(url))
+    try:
+        soup = BeautifulSoup(urllib_cached.urlopen(url))
+    except Exception,e:
+        print "Got exception %s" % e
+        return False
 
     msg_div = soup.find(id="qaiku_%s" % message_id)
     if not msg_div:

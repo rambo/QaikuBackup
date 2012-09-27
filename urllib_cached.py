@@ -172,7 +172,7 @@ def urlopen(url):
     """Act like urllib2.urlopen() (I hope...)"""
     global opener
     conditional_init()
-    return opener.open(url)
+    return opener.open(url, timeout=60)
 
 if __name__ == "__main__":
     unittest.main()
