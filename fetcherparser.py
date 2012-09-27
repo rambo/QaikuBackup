@@ -186,6 +186,7 @@ def fetch_paged(urlbase, pagelimit=None):
         if (   not parsed
             or len(parsed) == 0):
             loop = False
+            continue
         resultlist = resultlist+parsed
         page = page+1
         if (    pagelimit
