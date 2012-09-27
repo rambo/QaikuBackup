@@ -2,10 +2,11 @@
 # -*- coding: UTF-8 -*-
 """This module will handle fetching the JSON and parsing it to do recursive fetches of messages and their resources (images etc)"""
 import json, urllib2, hashlib, os, re
-import traceback, sys
+import traceback
 # some global config values
 
 debug = True
+debug_tracebacks = False
 fetch_profile_images = True
 
 import storage, screenscraper
@@ -69,8 +70,9 @@ def fetch_resource(url):
 def fetch_message(object_id):
     """Returns a message, from local cache if available, otherwise loads via REST API, you probably should be calling recursive_fetch_message first"""
     if debug:
-        print "fetch_message(%s) called from" % repr(object_id)
-        traceback.print_stack()
+        print "fetch_message(%s) called" % repr(object_id)
+        if debug_tracebacks:
+            traceback.print_stack()
     object_id = str(object_id) # cast to normal str
     if storage.in_cache_byid(object_id):
         obj = storage.get_byid(object_id)
@@ -82,15 +84,17 @@ def fetch_message(object_id):
             # Object is stale, do not return from cache
             if debug:
                 print "storage.objectcache[%s] is stale" % repr(object_id)
-                print json.dumps(storage.get_byid(object_id), sort_keys=True, indent=4)
+                if debug_tracebacks:
+                    print json.dumps(storage.get_byid(object_id), sort_keys=True, indent=4)
             pass
         else:
             if debug:
                 print "message %s returned from cache" % object_id
             return storage.get_byid(object_id)
     else:
-        print "objectcache has no key %s" % repr(object_id)
-        print json.dumps(storage.objectcache, sort_keys=True, indent=4)
+        #print "objectcache has no key %s" % repr(object_id)
+        #print json.dumps(storage.objectcache, sort_keys=True, indent=4)
+        pass
     url = "http://www.qaiku.com/api/statuses/show/%s.json?apikey=%s" % (object_id, apikey)
     parsed = json_parse_url(url)
     if not parsed:
@@ -214,5 +218,5 @@ if __name__ == '__main__':
     print "*** STARTING ***"
     recursive_fetch_message(sys.argv[1])
     print "*** DONE ***"
-    print "storage.objectcache contents:" % msgid
+    print "storage.objectcache contents:"
     print json.dumps(storage.objectcache, sort_keys=True, indent=4)

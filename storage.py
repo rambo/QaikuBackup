@@ -16,29 +16,22 @@ apikey = read_api_key()
 objectcache = {}
 
 def update(obj):
-    """Re-inserts the object to the cache dict, maybe this will help with weird cow/pointer issues"""
+    """(Re-)inserts the object to the cache dict, maybe this will help with weird cow/pointer issues"""
     object_id = str(obj['id'])
-    if debug:
-        print "update called from"
-        traceback.print_stack()
-        if objectcache.has_key(object_id):
-            print "Before update objectcache[%s] is" % object_id
-            print json.dumps(objectcache[object_id], sort_keys=True, indent=4)
     objectcache[object_id] = obj
-    if debug:
-        print "After update objectcache[%s] is" % object_id
-        print json.dumps(objectcache[object_id], sort_keys=True, indent=4)
-        
+
 def in_cache(obj):
-    """Normalized way to check for object presence in cache"""
+    """Normalized way to check for object presence in cache (takes full object)"""
     object_id = str(obj['id'])
     return objectcache.has_key(object_id)
 
 def in_cache_byid(object_id):
+    """Check if given object identifier is in the cache"""
     object_id = str(object_id)
     return objectcache.has_key(object_id)
 
 def get_byid(object_id):
+    """Returns from the cache the given object"""
     object_id = str(object_id)
     return objectcache[object_id]
     
