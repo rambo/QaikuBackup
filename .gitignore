@@ -2,6 +2,7 @@
 
 qaiku_api_key.txt
 resources/*
+.urllib2cache/*
 
 # Packages
 *.egg
