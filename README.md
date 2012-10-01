@@ -12,6 +12,15 @@ something else (HTML, RSS, whatever)
 
 [apidoc]: http://www.qaiku.com/api/usage/
 
+## Status
+
+Dumping channels and user-streams works, resources like attached images are copied to local storage as well. The dumper will attempt to be somewhat nice to the Qaiku server limit
+the rate and total amount of queries it makes by various techniques (it however uses very naive caching, if you plan on dumping a lot of channels you might want to setup a 
+local *real* http-proxy configured for very aggressive caching [like ignoring all the no-cache -style directives...])
+
+Most importantly there are *no formatters* to make anything immediately usefull (like static HTML-pages) of the data, I expect someone else will be quicker to need that.
+Submit a pull-request if you make a formatting tool and I'll merge it.
+
 ## Usage
 
   1. Checkout the repo and change directory there.
@@ -32,7 +41,7 @@ into CLI utilities. There is very little regard for end-user usability and so fa
 ## Python versions
 
 I have been developing this on OSX with Python2.7 from [Homebrew][hb], it probably works on slightly older versions
-and might event work on Windows (but I give no guarantees, at least I try to use proper cross-platform path handling etc)
+and might even work on Windows (but I give no guarantees, at least I try to use proper cross-platform path handling etc)
 
 [hb]: http://mxcl.github.com/homebrew/
 
