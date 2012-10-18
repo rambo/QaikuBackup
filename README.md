@@ -12,6 +12,10 @@ something else (HTML, RSS, whatever)
 
 [apidoc]: http://www.qaiku.com/api/usage/
 
+## So what ?
+
+AFAIUnderstand Twitter has *very* similar API, so knock yourself out and adjust the code to make backups of twitter streams.
+
 ## Status
 
 Dumping channels and user-streams works, resources like attached images are copied to local storage as well. The dumper will attempt to be somewhat nice to the Qaiku server limit
